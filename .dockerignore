@@ -1,0 +1,19 @@
+# .dockerignore
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+.uv/
+env/
+venv/
+ENV/
+.git/
+.github/
+.gitignore
+*.md
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
