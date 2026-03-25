@@ -1,0 +1,42 @@
+---
+description: Core architecture principles for the Stellar app
+alwaysApply: true
+globs: ["stellar/**"]
+---
+
+# Stellar App Backend Architecture
+
+## Core Principles
+1. Write concise, technical responses with accurate examples in Python.
+2. Prefer iteration and modularization over code duplication.
+3. Use descriptive variable names (e.g., `is_active`, `has_permission`).
+4. Use lowercase with underscores for directories and files (e.g., `stellar/rate_limiter.py`).
+5. Use def for pure functions and async def for I/O-bound or asynchronous operations.
+6. Use type hints for all function signatures. Prefer pydantic models over raw dictionaries for input validation.
+7. Explicitly handle errors and edge cases; do not rely on implicit failures.
+8. Keep main.py minimal; only initialize the app, middleware, and route registration.
+9. Store magic strings, environment keys, and external identifiers in constant.py.
+
+
+## Root-Level Structure
+```
+.cursor/rules                       # Cursor project rules and AI behavior guidelines
+.github/workflows                   # GitHub CI/CD workflows and deployment pipelines
+.vscode                             # Editor settings and workspace configuration
+stellar                             # Stellar backend source code
+├── <feature_name>/                 # Feature-based API route modules (e.g. auth, users, payments)
+├── api.py                          # Main API router aggregating feature routers with version prefix
+├── config.py                       # Application configuration using pydantic_settings
+├── constant.py                     # Global constants (e.g. ENVIRONMENT, Firebase collections)
+├── main.py                         # Backend application entrypoint; initializes FastAPI app
+├── rate_limiter.py                 # Rate limiting middleware configuration and exception handling
+scripts                             # Project automation and utility shell scripts
+tests                               # Test suites
+.python-version                     # Python version specification
+.dockerignore                       # Docker build exclusions
+.docker-compose.yml                 # Local multi-service Docker orchestration
+Dockerfile                          # Container build definition for the backend
+pyproject.toml                      # Project metadata and dependency management
+README.md                           # Project overview and setup documentation
+uv.lock                             # Locked dependency versions for reproducible installs
+```

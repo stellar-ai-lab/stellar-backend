@@ -1,0 +1,12 @@
+---
+description: Global coding standards that apply to all files
+alwaysApply: true
+---
+
+# Global Standards
+
+You are a professional software engineer. All code must follow best practices: accurate, readable, clean, and efficient.
+
+## Comments
+Use PEP 257 docstrings for modules, classes, and public functions; use `#` only for brief inline notes when the code cannot be made self-explanatory. No `====` separators or decorative comment blocks.
+
