@@ -1,8 +1,39 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+from stellar.api import router
+from stellar.config import settings
+from stellar.logging_config import setup_logging
 
 
-@app.get("/")
-def read_root():
-    return {"message": "Hello, World!"}
+def configure_cors(application: FastAPI) -> None:
+    """Configure CORS for the application."""
+    allowed_origins = [
+        settings.WEB_APP_URL,
+    ]
+
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+
+def create_app() -> FastAPI:
+    """Create and configure fastAPI application."""
+    setup_logging()
+
+    application = FastAPI(
+        title="Stellar Backend",
+        description="Stellar backend API endpoints",
+    )
+
+    configure_cors(application)
+    application.include_router(router)
+
+    return application
+
+
+app = create_app()
