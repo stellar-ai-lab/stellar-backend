@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from stellar.api import router
 from stellar.config import settings
 from stellar.logging_config import setup_logging
+from stellar.rate_limiter import rate_limit_config
 
 
 def configure_cors(application: FastAPI) -> None:
@@ -32,6 +33,7 @@ def create_app() -> FastAPI:
     )
 
     configure_cors(application)
+    rate_limit_config(application)
     application.include_router(router)
 
     return application
