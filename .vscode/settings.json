@@ -10,5 +10,5 @@
   "editor.defaultFormatter": "charliermarsh.ruff",
   "editor.insertSpaces": true,
   "editor.tabSize": 4,
-  "editor.rulers": [88],
+  // "editor.rulers": [88],
 }

@@ -10,6 +10,7 @@ def configure_cors(application: FastAPI) -> None:
     """Configure CORS for the application."""
     allowed_origins = [
         settings.WEB_APP_URL,
+        "http://localhost:3000",
     ]
 
     application.add_middleware(
