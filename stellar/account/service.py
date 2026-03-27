@@ -13,13 +13,6 @@ log = logging.getLogger(__name__)
 class AccountService:
     """Account service."""
 
-    TABLE_NAME = "accounts"
-    ALLOWED_CREATION_ROLES = AllowedCreationRoles
-
-    # async def get_user_account(self, user_id: str, supabase: AsyncClient) -> dict:
-    #     """Get the account for the given user id."""
-    #     return {"user_id": user_id}
-
     async def create_user_account(
         self,
         payload: CreateUserAccount,
