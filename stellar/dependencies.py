@@ -44,6 +44,13 @@ async def get_current_user(
         ) from None
 
 
+async def get_current_user_token(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> str:
+    """Get the current user token from the Bearer token."""
+    return credentials.credentials
+
+
 def get_account_service() -> AccountService:
     """Return the shared account service instance."""
     return account_service
