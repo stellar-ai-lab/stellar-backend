@@ -37,10 +37,10 @@ async def get_current_user(
     except HTTPException:
         raise
     except Exception as e:
-        log.exception("Failed to resolve current user from Supabase")
+        log.exception(f"Failed to resolve current user from Supabase: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Internal server error: {e}",
+            detail="Internal server error",
         ) from None
 
 
