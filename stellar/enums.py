@@ -14,3 +14,8 @@ class AllowedCreationRoles(StrEnum):
     DEVELOPER = "developer"
     LEADERSHIP = "leadership"
     MANAGER = "manager"
+
+
+class AccountStatus(StrEnum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"

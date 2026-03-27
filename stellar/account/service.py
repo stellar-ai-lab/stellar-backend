@@ -5,7 +5,7 @@ from postgrest.exceptions import APIError
 from supabase import AsyncClient
 
 from stellar.account.schemas import CreateUserAccount, CreateUserAccountResponse
-from stellar.enums import AllowedCreationRoles
+from stellar.enums import AccountStatus, AllowedCreationRoles
 
 log = logging.getLogger(__name__)
 
@@ -57,7 +57,12 @@ class AccountService:
                 {
                     "email": payload.email,
                     "password": payload.password,
-                    "options": {"data": {"role": payload.role}},
+                    "options": {
+                        "data": {
+                            "role": payload.role,
+                            "status": AccountStatus.ACTIVE,
+                        }
+                    },
                 }
             )
             if not new_account.user:
