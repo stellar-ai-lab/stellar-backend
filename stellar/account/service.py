@@ -4,7 +4,12 @@ from fastapi import HTTPException, status
 from postgrest.exceptions import APIError
 from supabase import AsyncClient
 
-from stellar.account.schemas import CreateUserAccount, CreateUserAccountResponse
+from stellar.account.schemas import (
+    CreateUserAccount,
+    CreateUserAccountResponse,
+    LoginRequest,
+    LoginResponse,
+)
 from stellar.enums import AccountStatus, AllowedCreationRoles
 
 log = logging.getLogger(__name__)
@@ -12,6 +17,42 @@ log = logging.getLogger(__name__)
 
 class AccountService:
     """Account service."""
+
+    # FOR TESTING ONLY
+    async def login(
+        self,
+        payload: LoginRequest,
+        supabase: AsyncClient,
+    ) -> LoginResponse:
+        """Login user."""
+        try:
+            login = await supabase.auth.sign_in_with_password(
+                {"email": payload.email, "password": payload.password}
+            )
+            if not login.session or not login.session.access_token:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Failed to login",
+                )
+
+            return LoginResponse(
+                access_token=login.session.access_token,
+                refresh_token=login.session.refresh_token,
+            )
+        except HTTPException:
+            raise
+        except APIError as e:
+            log.exception(f"Failed to login: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to login",
+            )
+        except Exception as e:
+            log.exception(f"Failed to login: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            ) from None
 
     async def create_user_account(
         self,

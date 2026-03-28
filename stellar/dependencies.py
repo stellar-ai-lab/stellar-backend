@@ -14,6 +14,15 @@ security = HTTPBearer()
 log = logging.getLogger(__name__)
 
 
+# FOR TESTING ONLY
+async def get_supabase_client() -> AsyncClient:
+    """Get the supabase client."""
+    return await acreate_client(
+        settings.SUPABASE_URL,
+        settings.SUPABASE_SECRET_KEY,
+    )
+
+
 @dataclass
 class AuthContext:
     client: AsyncClient

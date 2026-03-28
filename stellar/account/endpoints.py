@@ -1,14 +1,28 @@
 from fastapi import APIRouter, Depends, Request, status
+from supabase import AsyncClient
 
-from stellar.account.schemas import CreateUserAccount
+from stellar.account.schemas import CreateUserAccount, LoginRequest
 from stellar.account.service import AccountService
 from stellar.dependencies import (
     AuthDependency,
     get_account_service,
+    get_supabase_client,
 )
 from stellar.rate_limiter import limiter
 
 router = APIRouter(prefix="/account", tags=["Account Service Endpoints"])
+
+
+# FOR TESTING ONLY
+@router.post("/login")
+async def login(
+    request: Request,
+    payload: LoginRequest,
+    supabase: AsyncClient = Depends(get_supabase_client),
+    service: AccountService = Depends(get_account_service),
+):
+    """Login user."""
+    return await service.login(payload, supabase)
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
