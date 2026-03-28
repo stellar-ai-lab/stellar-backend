@@ -85,7 +85,7 @@ class AccountService:
                 detail="Internal server error",
             ) from None
 
-    def _is_allowed_role(role: str) -> bool:
+    def _is_allowed_role(self, role: str | None) -> bool:
         """Check if the role is allowed to create an account for other users.
 
         Args:
@@ -94,6 +94,9 @@ class AccountService:
         Returns:
             True if the role is allowed to create an account for other users, False otherwise.
         """
+        if role is None:
+            return False
+
         try:
             AllowedCreationRoles(role)
             return True
