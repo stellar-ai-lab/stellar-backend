@@ -39,7 +39,7 @@ class AccountService:
                 )
 
             user_role = check_role.user.user_metadata.get("role")
-            if not _is_allowed_role(user_role):
+            if not self._is_allowed_role(user_role):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="User does not have the right role to create an account for other users",
@@ -58,7 +58,7 @@ class AccountService:
                     },
                 }
             )
-            if not new_account.user:
+            if not new_account.user or not new_account.user.id:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Failed to create user account",
@@ -85,21 +85,20 @@ class AccountService:
                 detail="Internal server error",
             ) from None
 
+    def _is_allowed_role(role: str) -> bool:
+        """Check if the role is allowed to create an account for other users.
 
-def _is_allowed_role(role: str) -> bool:
-    """Check if the role is allowed to create an account for other users.
+        Args:
+            role: The role to check.
 
-    Args:
-        role: The role to check.
-
-    Returns:
-        True if the role is allowed to create an account for other users, False otherwise.
-    """
-    try:
-        AllowedCreationRoles(role)
-        return True
-    except ValueError:
-        return False
+        Returns:
+            True if the role is allowed to create an account for other users, False otherwise.
+        """
+        try:
+            AllowedCreationRoles(role)
+            return True
+        except ValueError:
+            return False
 
 
 account_service = AccountService()
