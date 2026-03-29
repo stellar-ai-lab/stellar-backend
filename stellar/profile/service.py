@@ -14,6 +14,45 @@ class ProfileService:
 
     TABLE_NAME = "profiles"
 
+    async def get_profile(self, user_id: str, supabase: AsyncClient) -> Profile:
+        """Get Current User Profile.
+
+        Args:
+            user_id: Current user ID.
+            supabase: Supabase client.
+
+        Returns:
+            Current user profile.
+        """
+        try:
+            response = (
+                await supabase.table(self.TABLE_NAME)
+                .select("*")
+                .eq("user_id", user_id)
+                .execute()
+            )
+            if not response.data:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Profile not found",
+                )
+
+            return Profile(**response.data[0])
+        except HTTPException:
+            raise
+        except APIError as e:
+            log.exception(f"Failed to get profile: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to get profile",
+            )
+        except Exception as e:
+            log.exception(f"Failed to get profile: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            ) from None
+
     async def create_profile(
         self,
         payload: CreateProfile,
@@ -75,14 +114,14 @@ class ProfileService:
         self,
         payload: UpdateProfile,
         user_id: str,
-        client: AsyncClient,
+        supabase: AsyncClient,
     ) -> Profile:
         """Update a profile.
 
         Args:
             payload: Payload to update a profile.
             user_id: Current user ID.
-            client: Supabase client.
+            supabase: Supabase client.
 
         Returns:
             Updated profile.

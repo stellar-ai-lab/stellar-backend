@@ -8,15 +8,15 @@ from stellar.rate_limiter import limiter
 router = APIRouter(prefix="/profile", tags=["Profile Service Endpoints"])
 
 
-# @router.get("/", status_code=status.HTTP_200_OK)
-# @limiter.limit("5/minute")
-# async def get_profile(
-#     request: Request,
-#     auth: AuthDependency,
-#     service: ProfileService = Depends(get_profile_service),
-# ) -> Profile:
-#     """Get a profile."""
-#     return await service.get_profile(auth.current_user_id, auth.client)
+@router.get("/", status_code=status.HTTP_200_OK)
+@limiter.limit("10/minute")
+async def get_profile(
+    request: Request,
+    auth: AuthDependency,
+    service: ProfileService = Depends(get_profile_service),
+) -> Profile:
+    """Get a profile."""
+    return await service.get_profile(auth.current_user_id, auth.client)
 
 
 # @router.get("/{user_id}", status_code=status.HTTP_200_OK)
