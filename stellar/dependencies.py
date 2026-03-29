@@ -8,6 +8,7 @@ from supabase import AsyncClient, AsyncClientOptions, acreate_client
 
 from stellar.account.service import AccountService, account_service
 from stellar.config import settings
+from stellar.profile.service import ProfileService, profile_service
 
 security = HTTPBearer()
 
@@ -73,3 +74,8 @@ AuthDependency = Annotated[AuthContext, Depends(get_auth_context)]
 def get_account_service() -> AccountService:
     """Return the shared account service instance."""
     return account_service
+
+
+def get_profile_service() -> ProfileService:
+    """Return the shared profile service instance."""
+    return profile_service
