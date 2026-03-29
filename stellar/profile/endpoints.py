@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request, status
 
 from stellar.dependencies import AuthDependency, get_profile_service
-from stellar.profile.schemas import CreateProfile, Profile, PublicProfile
+from stellar.profile.schemas import CreateProfile, Profile, PublicProfile, UpdateProfile
 from stellar.profile.service import ProfileService
 from stellar.rate_limiter import limiter
 
@@ -43,13 +43,13 @@ async def create_profile(
     return await service.create_profile(payload, auth.current_user_id, auth.client)
 
 
-# @router.put("/", status_code=status.HTTP_200_OK)
-# @limiter.limit("5/minute")
-# async def update_profile(
-#     request: Request,
-#     payload: UpdateProfile,
-#     auth: AuthDependency,
-#     service: ProfileService = Depends(get_profile_service),
-# ) -> Profile:
-#     """Update a profile."""
-#     return await service.update_profile(payload, auth.current_user_id, auth.client)
+@router.put("/", status_code=status.HTTP_200_OK)
+@limiter.limit("5/minute")
+async def update_profile(
+    request: Request,
+    payload: UpdateProfile,
+    auth: AuthDependency,
+    service: ProfileService = Depends(get_profile_service),
+) -> Profile:
+    """Update a profile."""
+    return await service.update_profile(payload, auth.current_user_id, auth.client)

@@ -167,7 +167,56 @@ class ProfileService:
         Returns:
             Updated profile.
         """
-        return Profile
+        try:
+            # check if profile exists
+            check_profile = (
+                await supabase.table(self.TABLE_NAME)
+                .select("*")
+                .eq("user_id", user_id)
+                .execute()
+            )
+            if not check_profile.data:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Profile not found",
+                )
+
+            # update profile
+            data = payload.model_dump(mode="json", exclude_none=True)
+            if not data:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="No data to update",
+                )
+
+            response = (
+                await supabase.table(self.TABLE_NAME)
+                .update(data)
+                .eq("user_id", user_id)
+                .execute()
+            )
+
+            if not response.data:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Failed to update profile",
+                )
+
+            return Profile(**response.data[0])
+        except HTTPException:
+            raise
+        except APIError as e:
+            log.exception(f"Failed to update profile: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to update profile",
+            )
+        except Exception as e:
+            log.exception(f"Failed to update profile: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            ) from None
 
 
 profile_service = ProfileService()
