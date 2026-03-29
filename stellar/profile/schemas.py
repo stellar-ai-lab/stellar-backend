@@ -40,6 +40,19 @@ class UpdateProfile(BaseModel):
     onboarded: Optional[bool] = None
 
 
+class PublicProfile(BaseModel):
+    id: str
+    user_id: str
+    first_name: str
+    last_name: str
+    gender: Gender
+    bio: Optional[str] = None
+    avatar_url: Optional[str] = None
+    job_title: Optional[JobTitle] = None
+    team_id: Optional[str] = None
+    project_id: Optional[str] = None
+
+
 class Profile(ProfileBase):
     id: str
     user_id: str

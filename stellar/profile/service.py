@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 from postgrest.exceptions import APIError
 from supabase import AsyncClient
 
-from stellar.profile.schemas import CreateProfile, Profile, UpdateProfile
+from stellar.profile.schemas import CreateProfile, Profile, PublicProfile, UpdateProfile
 
 log = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class ProfileService:
     TABLE_NAME = "profiles"
 
     async def get_profile(self, user_id: str, supabase: AsyncClient) -> Profile:
-        """Get Current User Profile.
+        """Get current user profile.
 
         Args:
             user_id: Current user ID.
@@ -48,6 +48,47 @@ class ProfileService:
             )
         except Exception as e:
             log.exception(f"Failed to get profile: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            ) from None
+
+    async def get_profile_by_user_id(
+        self, user_id: str, supabase: AsyncClient
+    ) -> PublicProfile:
+        """Get profile by user ID.
+
+        Args:
+            user_id: User ID.
+            supabase: Supabase client.
+
+        Returns:
+            Profile by user ID.
+        """
+        try:
+            response = (
+                await supabase.table(self.TABLE_NAME)
+                .select("*")
+                .eq("user_id", user_id)
+                .execute()
+            )
+            if not response.data:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Profile not found",
+                )
+
+            return PublicProfile(**response.data[0])
+        except HTTPException:
+            raise
+        except APIError as e:
+            log.exception(f"Failed to get profile by user ID: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to fetch the profile",
+            )
+        except Exception as e:
+            log.exception(f"Failed to get profile by user ID: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Internal server error",
