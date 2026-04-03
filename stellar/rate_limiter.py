@@ -23,12 +23,7 @@ def rate_limit_exceeded_handler(
     """
     return JSONResponse(
         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-        content={
-            "error": "Rate limit exceeded",
-            "message": "Too many requests. Please try again later.",
-            "detail": str(exc.detail),
-            "endpoint": str(request.url.path),
-        },
+        content={"detail": "Too many requests. Please try again later."},
         headers=exc.headers,
     )
 
