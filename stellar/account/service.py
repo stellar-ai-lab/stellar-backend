@@ -97,6 +97,8 @@ class AccountService:
                     "password": payload.password,
                     "email_confirm": True,
                     "user_metadata": {
+                        "first_name": payload.first_name,
+                        "last_name": payload.last_name,
                         "role": payload.role,
                         "status": AccountStatus.ACTIVE,
                     },
@@ -108,10 +110,14 @@ class AccountService:
                     detail="Failed to create user account",
                 )
 
+            metadata = new_account.user.user_metadata
+            first_name = metadata.get("first_name", payload.first_name)
+            last_name = metadata.get("last_name", payload.last_name)
             return CreateUserAccountResponse(
                 id=new_account.user.id,
                 email=new_account.user.email,
-                role=new_account.user.user_metadata.get("role", payload.role),
+                name=f"{first_name} {last_name}",
+                role=metadata.get("role", payload.role),
             )
 
         except HTTPException:
