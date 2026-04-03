@@ -2,7 +2,7 @@ import logging
 
 from fastapi import HTTPException, status
 from postgrest.exceptions import APIError
-from supabase import AsyncClient
+from supabase import AsyncClient, acreate_client
 from supabase_auth.errors import AuthApiError
 
 from stellar.account.schemas import (
@@ -11,6 +11,7 @@ from stellar.account.schemas import (
     LoginRequest,
     LoginResponse,
 )
+from stellar.config import settings
 from stellar.enums import AccountStatus, AllowedCreationRoles
 
 log = logging.getLogger(__name__)
@@ -86,10 +87,11 @@ class AccountService:
                     detail="User does not have the right role to create an account for other users",
                 )
 
-            # Use the admin API instead of sign_up — avoids confirmation emails
-            # and their rate limits, marks the account as confirmed immediately,
-            # and raises a proper AuthApiError on duplicate emails.
-            new_account = await supabase.auth.admin.create_user(
+            admin_client = await acreate_client(
+                settings.SUPABASE_URL,
+                settings.SUPABASE_SECRET_KEY,
+            )
+            new_account = await admin_client.auth.admin.create_user(
                 {
                     "email": payload.email,
                     "password": payload.password,

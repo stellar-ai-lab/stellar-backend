@@ -40,10 +40,10 @@ async def get_auth_context(
 
         supabase_client = await acreate_client(
             settings.SUPABASE_URL,
-            settings.SUPABASE_SECRET_KEY,
+            settings.SUPABASE_ANON_KEY,
             options=AsyncClientOptions(
                 headers={"Authorization": f"Bearer {token}"}
-            ),  # allow to access the supabase bucket
+            ),
         )
 
         response = await supabase_client.auth.get_user(token)
