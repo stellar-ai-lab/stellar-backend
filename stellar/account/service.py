@@ -3,6 +3,7 @@ import logging
 from fastapi import HTTPException, status
 from postgrest.exceptions import APIError
 from supabase import AsyncClient
+from supabase_auth.errors import AuthApiError
 
 from stellar.account.schemas import (
     CreateUserAccount,
@@ -71,31 +72,31 @@ class AccountService:
             Created account.
         """
         try:
-            # verify that the user have the right role to create an account for other users
-            check_role = await supabase.auth.get_user(token)
-            if not check_role or not check_role.user:
+            check_user = await supabase.auth.get_user(token)
+            if not check_user or not check_user.user:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="User account not found",
                 )
 
-            user_role = check_role.user.user_metadata.get("role")
+            user_role = check_user.user.user_metadata.get("role")
             if not self._is_allowed_role(user_role):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="User does not have the right role to create an account for other users",
                 )
 
-            # create new account
-            new_account = await supabase.auth.sign_up(
+            # Use the admin API instead of sign_up — avoids confirmation emails
+            # and their rate limits, marks the account as confirmed immediately,
+            # and raises a proper AuthApiError on duplicate emails.
+            new_account = await supabase.auth.admin.create_user(
                 {
                     "email": payload.email,
                     "password": payload.password,
-                    "options": {
-                        "data": {
-                            "role": payload.role,
-                            "status": AccountStatus.ACTIVE,
-                        }
+                    "email_confirm": True,
+                    "user_metadata": {
+                        "role": payload.role,
+                        "status": AccountStatus.ACTIVE,
                     },
                 }
             )
@@ -113,6 +114,12 @@ class AccountService:
 
         except HTTPException:
             raise
+        except AuthApiError as e:
+            log.warning(f"Auth error during account creation: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
+            )
         except APIError as e:
             log.exception(f"Failed to create user account: {e}")
             raise HTTPException(
