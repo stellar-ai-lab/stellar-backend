@@ -10,6 +10,7 @@ from stellar.account.schemas import (
     CreateUserAccountResponse,
     LoginRequest,
     LoginResponse,
+    TestAccountCreation,
     UserAccountCreation,
     UserAccountResponse,
 )
@@ -23,7 +24,40 @@ log = logging.getLogger(__name__)
 class AccountService:
     """Account service."""
 
-    # FOR TESTING ONLY
+    # FOR LOCAL DEVELOPMENT TESTING ONLY
+    async def sign_up(
+        self,
+        payload: TestAccountCreation,
+    ):
+        """Sign up user."""
+
+        try:
+            supabase = await acreate_client(
+                settings.SUPABASE_URL,
+                settings.SUPABASE_ANON_KEY,
+            )
+            new_account = await supabase.auth.sign_up(
+                {"email": payload.email, "password": payload.password}
+            )
+
+            return new_account
+        except HTTPException:
+            raise
+        except AuthApiError as e:
+            log.exception(f"Auth error during sign up: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
+            )
+        except Exception as e:
+            log.exception(f"Failed to sign up: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            ) from None
+        return
+
+    # FOR LOCAL DEVELOPMENT TESTING ONLY
     async def login(
         self,
         payload: LoginRequest,
@@ -133,28 +167,21 @@ class AccountService:
     async def create_user_account(
         self,
         payload: UserAccountCreation,
-        token: str,
-        supabase: AsyncClient,
+        auth: AuthContext,
     ) -> CreateUserAccountResponse:
         """Create a new user account.
 
         Args:
             payload: Payload to create a new user account.
-            token: Current user token.
-            supabase: Supabase client.
+            auth: Authentication context.
 
         Returns:
             Created account.
         """
         try:
-            check_user = await supabase.auth.get_user(token)
-            if not check_user or not check_user.user:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="User account not found",
-                )
+            user_role = auth.role
+            current_user_name = auth.current_user_name
 
-            user_role = check_user.user.user_metadata.get("role")
             if not self._is_allowed_role(user_role):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -176,7 +203,7 @@ class AccountService:
                         "job_title": payload.job_title,
                         "role": payload.role,
                         "team": payload.team,
-                        "created_by": payload.created_by,
+                        "created_by": current_user_name,
                         "status": AccountStatus.ACTIVE,
                     },
                 }
@@ -194,7 +221,7 @@ class AccountService:
                 id=new_account.user.id,
                 email=new_account.user.email,
                 name=f"{first_name} {last_name}",
-                role=metadata.get("role", payload.role),
+                role=metadata.get("role"),
             )
 
         except HTTPException:

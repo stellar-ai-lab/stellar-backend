@@ -14,8 +14,6 @@ class UserAccountBase(BaseModel):
     job_title: JobTitle
     role: UserRole
     team: str
-    created_by: str
-    status: AccountStatus
 
 
 class UserAccountCreation(UserAccountBase):
@@ -50,3 +48,8 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     access_token: str
     refresh_token: str
+
+
+class TestAccountCreation(BaseModel):
+    email: EmailStr
+    password: str

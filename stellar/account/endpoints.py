@@ -6,6 +6,7 @@ from supabase import AsyncClient
 from stellar.account.schemas import (
     CreateUserAccountResponse,
     LoginRequest,
+    TestAccountCreation,
     UserAccountCreation,
     UserAccountResponse,
 )
@@ -18,6 +19,15 @@ from stellar.dependencies import (
 from stellar.rate_limiter import limiter
 
 router = APIRouter(prefix="/account", tags=["Account Service Endpoints"])
+
+
+# FOR LOCAL DEVELOPMENT TESTING ONLY
+@router.post("/register", status_code=status.HTTP_201_CREATED)
+async def sign_up(
+    payload: TestAccountCreation,
+    service: AccountService = Depends(get_account_service),
+):
+    return await service.sign_up(payload)
 
 
 # FOR LOCAL DEVELOPMENT TESTING ONLY
@@ -52,4 +62,4 @@ async def create_user_account(
     service: AccountService = Depends(get_account_service),
 ) -> CreateUserAccountResponse:
     """Create new user account."""
-    return await service.create_user_account(payload, auth.token, auth.client)
+    return await service.create_user_account(payload, auth)
