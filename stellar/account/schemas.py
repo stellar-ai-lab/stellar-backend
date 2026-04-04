@@ -13,7 +13,6 @@ class UserAccountBase(BaseModel):
     last_name: str
     job_title: JobTitle
     role: UserRole
-    team: str
 
 
 class UserAccountCreation(UserAccountBase):
@@ -25,7 +24,6 @@ class UserAccountResponse(BaseModel):
     email: EmailStr
     name: str
     job_title: JobTitle
-    team: str
     role: UserRole
     status: AccountStatus
     created_by: str
