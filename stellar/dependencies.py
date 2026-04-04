@@ -1,12 +1,12 @@
 import logging
-from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from supabase import AsyncClient, AsyncClientOptions, acreate_client
+from supabase import AsyncClient, AsyncClientOptions, AuthApiError, acreate_client
 
 from stellar.account.service import AccountService, account_service
+from stellar.auth_context import AuthContext
 from stellar.config import settings
 from stellar.profile.service import ProfileService, profile_service
 
@@ -24,13 +24,6 @@ async def get_supabase_client() -> AsyncClient:
     )
 
 
-@dataclass
-class AuthContext:
-    client: AsyncClient
-    current_user_id: str
-    token: str
-
-
 async def get_auth_context(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> AuthContext:
@@ -41,9 +34,7 @@ async def get_auth_context(
         supabase_client = await acreate_client(
             settings.SUPABASE_URL,
             settings.SUPABASE_ANON_KEY,
-            options=AsyncClientOptions(
-                headers={"Authorization": f"Bearer {token}"}
-            ),
+            options=AsyncClientOptions(headers={"Authorization": f"Bearer {token}"}),
         )
 
         response = await supabase_client.auth.get_user(token)
@@ -57,9 +48,17 @@ async def get_auth_context(
             client=supabase_client,
             current_user_id=response.user.id,
             token=token,
+            role=response.user.user_metadata.get("role"),
         )
+
     except HTTPException:
         raise
+    except AuthApiError as e:
+        log.warning(f"Auth error during get auth context: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
     except Exception as e:
         log.exception(f"Failed to get auth context: {e}")
         raise HTTPException(
