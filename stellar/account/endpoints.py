@@ -1,7 +1,14 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, Request, status
 from supabase import AsyncClient
 
-from stellar.account.schemas import CreateUserAccount, LoginRequest
+from stellar.account.schemas import (
+    CreateUserAccountResponse,
+    LoginRequest,
+    UserAccountCreation,
+    UserAccountResponse,
+)
 from stellar.account.service import AccountService
 from stellar.dependencies import (
     AuthDependency,
@@ -13,7 +20,7 @@ from stellar.rate_limiter import limiter
 router = APIRouter(prefix="/account", tags=["Account Service Endpoints"])
 
 
-# FOR TESTING ONLY
+# FOR LOCAL DEVELOPMENT TESTING ONLY
 @router.post("/login")
 async def login(
     request: Request,
@@ -25,13 +32,24 @@ async def login(
     return await service.login(payload, supabase)
 
 
+@router.get("/", status_code=status.HTTP_200_OK)
+@limiter.limit("20/minute")
+async def get_user_accounts(
+    request: Request,
+    auth: AuthDependency,
+    service: AccountService = Depends(get_account_service),
+) -> List[UserAccountResponse]:
+    """Get all user accounts."""
+    return await service.get_user_accounts(auth)
+
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 @limiter.limit("10/minute")
 async def create_user_account(
     request: Request,
-    payload: CreateUserAccount,
+    payload: UserAccountCreation,
     auth: AuthDependency,
     service: AccountService = Depends(get_account_service),
-):
+) -> CreateUserAccountResponse:
     """Create new user account."""
     return await service.create_user_account(payload, auth.token, auth.client)

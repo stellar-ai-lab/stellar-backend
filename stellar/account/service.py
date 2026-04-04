@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 from fastapi import HTTPException, status
 from postgrest.exceptions import APIError
@@ -6,11 +7,13 @@ from supabase import AsyncClient, acreate_client
 from supabase_auth.errors import AuthApiError
 
 from stellar.account.schemas import (
-    CreateUserAccount,
     CreateUserAccountResponse,
     LoginRequest,
     LoginResponse,
+    UserAccountCreation,
+    UserAccountResponse,
 )
+from stellar.auth_context import AuthContext
 from stellar.config import settings
 from stellar.enums import AccountStatus, AllowedCreationRoles
 
@@ -41,8 +44,15 @@ class AccountService:
                 access_token=login.session.access_token,
                 refresh_token=login.session.refresh_token,
             )
+
         except HTTPException:
             raise
+        except AuthApiError as e:
+            log.exception(f"Auth error during login: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
+            )
         except APIError as e:
             log.exception(f"Failed to login: {e}")
             raise HTTPException(
@@ -56,9 +66,73 @@ class AccountService:
                 detail="Internal server error",
             ) from None
 
+    async def get_user_accounts(
+        self,
+        auth: AuthContext,
+    ) -> List[UserAccountResponse]:
+        """Get all user accounts.
+
+        Args:
+            auth: Authentication context.
+
+        Returns:
+            List of user accounts.
+        """
+        role = auth.role
+
+        try:
+            if not self._is_allowed_role(role):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User does not have the right role to get user accounts",
+                ) from None
+
+            admin_client = await acreate_client(
+                settings.SUPABASE_URL,
+                settings.SUPABASE_SECRET_KEY,
+            )
+
+            users = await admin_client.auth.admin.list_users()
+            if not users:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No user accounts found",
+                )
+
+            return [
+                UserAccountResponse(
+                    id=user.id,
+                    email=user.email,
+                    name=f"{user.user_metadata.get('first_name', '')} {user.user_metadata.get('last_name', '')}".strip(),
+                    job_title=user.user_metadata.get("job_title"),
+                    team=user.user_metadata.get("team"),
+                    role=user.user_metadata.get("role"),
+                    status=user.user_metadata.get("status"),
+                    created_by=user.user_metadata.get("created_by"),
+                    created_at=user.created_at,
+                    updated_at=user.updated_at,
+                )
+                for user in users
+            ]
+
+        except HTTPException:
+            raise
+        except APIError as e:
+            log.exception(f"Failed to get user accounts: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to get user accounts",
+            )
+        except Exception as e:
+            log.exception(f"Failed to get user accounts: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            ) from None
+
     async def create_user_account(
         self,
-        payload: CreateUserAccount,
+        payload: UserAccountCreation,
         token: str,
         supabase: AsyncClient,
     ) -> CreateUserAccountResponse:
@@ -99,7 +173,10 @@ class AccountService:
                     "user_metadata": {
                         "first_name": payload.first_name,
                         "last_name": payload.last_name,
+                        "job_title": payload.job_title,
                         "role": payload.role,
+                        "team": payload.team,
+                        "created_by": payload.created_by,
                         "status": AccountStatus.ACTIVE,
                     },
                 }
