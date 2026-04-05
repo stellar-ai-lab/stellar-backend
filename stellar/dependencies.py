@@ -9,6 +9,7 @@ from stellar.account.service import AccountService, account_service
 from stellar.auth_context import AuthContext
 from stellar.config import settings
 from stellar.profile.service import ProfileService, profile_service
+from stellar.teams.service import TeamService, team_service
 
 security = HTTPBearer()
 
@@ -81,3 +82,8 @@ def get_account_service() -> AccountService:
 def get_profile_service() -> ProfileService:
     """Return the shared profile service instance."""
     return profile_service
+
+
+def get_team_service() -> TeamService:
+    """Return the shared team service instance."""
+    return team_service
