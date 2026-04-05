@@ -18,7 +18,6 @@ class ProfileBase(BaseModel):
     team_id: Optional[str] = None
     project_id: Optional[str] = None
     account_status: AccountStatus
-    onboarded: bool
 
 
 class CreateProfile(ProfileBase):
@@ -37,7 +36,6 @@ class UpdateProfile(BaseModel):
     team_id: Optional[str] = None
     project_id: Optional[str] = None
     account_status: Optional[AccountStatus] = None
-    onboarded: Optional[bool] = None
 
 
 class PublicProfile(BaseModel):

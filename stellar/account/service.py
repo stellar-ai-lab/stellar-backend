@@ -202,6 +202,7 @@ class AccountService:
                         "last_name": payload.last_name,
                         "job_title": payload.job_title,
                         "role": payload.role,
+                        "onboarded": False,
                         "created_by": current_user_name,
                         "status": AccountStatus.ACTIVE,
                     },

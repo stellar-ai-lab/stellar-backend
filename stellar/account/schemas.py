@@ -13,6 +13,7 @@ class UserAccountBase(BaseModel):
     last_name: str
     job_title: JobTitle
     role: UserRole
+    onboarded: bool
 
 
 class UserAccountCreation(UserAccountBase):
@@ -26,6 +27,7 @@ class UserAccountResponse(BaseModel):
     job_title: JobTitle
     role: UserRole
     status: AccountStatus
+    onboarded: bool
     created_by: str
     created_at: datetime
     updated_at: datetime
