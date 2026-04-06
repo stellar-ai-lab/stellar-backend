@@ -24,3 +24,16 @@ class TeamResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+
+
+class TeamMemberCreation(BaseModel):
+    user_id: UUID
+
+
+class TeamMemberResponse(BaseModel):
+    id: UUID
+    team_id: UUID
+    user_id: UUID
+    added_by: str
+    created_at: datetime
+    updated_at: datetime
