@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, Request, status
 
 from stellar.dependencies import AuthDependency, get_team_service
@@ -11,6 +13,17 @@ from stellar.teams.schemas import (
 from stellar.teams.service import TeamService
 
 router = APIRouter(prefix="/teams", tags=["Teams Service Endpoints"])
+
+
+@router.get("/", status_code=status.HTTP_200_OK)
+@limiter.limit("15/minute")
+async def get_all_teams(
+    request: Request,
+    auth: AuthDependency,
+    service: TeamService = Depends(get_team_service),
+) -> List[TeamResponse]:
+    """Get the list of all teams."""
+    return await service.get_all_teams(auth)
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)

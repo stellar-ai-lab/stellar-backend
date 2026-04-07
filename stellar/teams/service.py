@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 from fastapi import HTTPException, status
 from postgrest.exceptions import APIError
@@ -21,6 +22,41 @@ class TeamService:
     TEAMS_TABLE = "teams"
     TEAMS_MEMBERS_TABLE = "team_members"
 
+    async def get_all_teams(self, auth: AuthContext) -> List[TeamResponse]:
+        """Get the list of all teams.
+
+        Args:
+            auth: Authentication context.
+
+        Returns:
+            List of all teams.
+        """
+        supabase = auth.client
+
+        try:
+            response = await supabase.table(self.TEAMS_TABLE).select("*").execute()
+            if not response.data:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No teams found",
+                )
+
+            return [TeamResponse(**team) for team in response.data]
+        except HTTPException:
+            raise
+        except APIError as e:
+            log.exception(f"Failed to get all teams: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to get all teams",
+            )
+        except Exception as e:
+            log.exception(f"Failed to get all teams: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            ) from None
+
     async def create_team(
         self, payload: TeamCreation, auth: AuthContext
     ) -> TeamResponse:
@@ -37,7 +73,7 @@ class TeamService:
         current_user_id = auth.current_user_id
 
         try:
-            if not self._can_create_team(auth.role):
+            if not self._is_allowed_role(auth.role):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="User does not have permission to create teams",
@@ -82,8 +118,8 @@ class TeamService:
                 detail="Internal server error",
             ) from None
 
-    def _can_create_team(self, role: str | None) -> bool:
-        """Return True if the role may create teams."""
+    def _is_allowed_role(self, role: str | None) -> bool:
+        """Check if the role is allowed to perform the action."""
 
         if role is None:
             return False
@@ -110,7 +146,7 @@ class TeamService:
         current_user_name = auth.current_user_name
 
         try:
-            if not self._can_add_team_member(auth.role):
+            if not self._is_allowed_role(auth.role):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="User does not have permission to add team members",
