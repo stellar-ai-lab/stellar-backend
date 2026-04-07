@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from supabase import AsyncClient, AsyncClientOptions, AuthApiError, acreate_client
+from supabase import AsyncClientOptions, AuthApiError, acreate_client
 
 from stellar.account.service import AccountService, account_service
 from stellar.auth_context import AuthContext
@@ -14,15 +14,6 @@ from stellar.teams.service import TeamService, team_service
 security = HTTPBearer()
 
 log = logging.getLogger(__name__)
-
-
-# FOR TESTING ONLY
-async def get_supabase_client() -> AsyncClient:
-    """Get the supabase client."""
-    return await acreate_client(
-        settings.SUPABASE_URL,
-        settings.SUPABASE_SECRET_KEY,
-    )
 
 
 async def get_auth_context(
