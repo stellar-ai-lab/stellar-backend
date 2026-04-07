@@ -57,6 +57,47 @@ class TeamService:
                 detail="Internal server error",
             ) from None
 
+    async def get_team_members(self, team_id: str, auth: AuthContext) -> TeamResponse:
+        """Get the list of members of a team.
+
+        Args:
+            team_id: Team ID.
+            auth: Authentication context.
+
+        Returns:
+            List of team members.
+        """
+        supabase = auth.client
+
+        try:
+            response = (
+                await supabase.table(self.TEAMS_MEMBERS_TABLE)
+                .select("*")
+                .eq("team_id", team_id)
+                .execute()
+            )
+            if not response.data:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No team members found",
+                )
+
+            return [TeamMemberResponse(**member) for member in response.data]
+        except HTTPException:
+            raise
+        except APIError as e:
+            log.exception(f"Failed to get team members: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to get team members",
+            )
+        except Exception as e:
+            log.exception(f"Failed to get team members: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            ) from None
+
     async def create_team(
         self, payload: TeamCreation, auth: AuthContext
     ) -> TeamResponse:
