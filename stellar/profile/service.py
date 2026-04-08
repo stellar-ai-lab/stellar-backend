@@ -1,5 +1,11 @@
 import logging
 
+from fastapi import HTTPException, status
+from postgrest import APIError
+
+from stellar.auth_context import AuthContext
+from stellar.profile.schemas import ProfileCreation, ProfileResponse
+
 log = logging.getLogger(__name__)
 
 
@@ -7,6 +13,59 @@ class ProfileService:
     """Profile service."""
 
     PROFILES_TABLE = "profiles"
+
+    async def create_user_profile(
+        self, payload: ProfileCreation, auth: AuthContext
+    ) -> ProfileResponse:
+        """Create a new user profile.
+
+        Args:
+            payload: Payload to create a new user profile.
+            auth: Authentication context.
+
+        Returns:
+            Created user profile.
+        """
+        supabase = auth.client
+        current_user_id = auth.current_user_id
+        try:
+            existing = (
+                await supabase.table(self.PROFILES_TABLE)
+                .select("user_id")
+                .eq("user_id", current_user_id)
+                .execute()
+            )
+            if existing.data:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Profile already exists",
+                )
+
+            data = payload.model_dump(mode="json")
+            data["user_id"] = current_user_id
+
+            response = await supabase.table(self.PROFILES_TABLE).insert(data).execute()
+            if not response.data or not response.data[0]:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Failed to create user profile",
+                )
+
+            return ProfileResponse(**response.data[0])
+        except HTTPException:
+            raise
+        except APIError as e:
+            log.exception(f"Failed to create user profile: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to create user profile",
+            )
+        except Exception as e:
+            log.exception(f"Failed to create user profile: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            ) from None
 
     # async def get_profile(self, user_id: str, supabase: AsyncClient) -> Profile:
     #     """Get current user profile.
@@ -83,63 +142,6 @@ class ProfileService:
     #         )
     #     except Exception as e:
     #         log.exception(f"Failed to get profile by user ID: {e}")
-    #         raise HTTPException(
-    #             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-    #             detail="Internal server error",
-    #         ) from None
-
-    # async def create_profile(
-    #     self,
-    #     payload: ProfileCreation,
-    #     auth: AuthContext,
-    # ) -> ProfileResponse:
-    #     """Create a new profile.
-
-    #     Args:
-    #         payload: Payload to create a new profile.
-    #         auth: Authentication context.
-
-    #     Returns:
-    #         Created profile response.
-    #     """
-
-    #     user_id = auth.current_user_id
-    #     supabase = auth.client
-    #     try:
-    #         existing = (
-    #             await supabase.table(self.PROFILES_TABLE)
-    #             .select("id")
-    #             .eq("user_id", user_id)
-    #             .execute()
-    #         )
-    #         if existing.data:
-    #             raise HTTPException(
-    #                 status_code=status.HTTP_409_CONFLICT,
-    #                 detail="Profile already exists",
-    #             )
-
-    #         data = payload.model_dump(mode="json")
-    #         data["user_id"] = user_id
-
-    #         response = await supabase.table(self.PROFILES_TABLE).insert(data).execute()
-    #         if not response.data or not response.data[0]:
-    #             raise HTTPException(
-    #                 status_code=status.HTTP_400_BAD_REQUEST,
-    #                 detail="Failed to create profile",
-    #             )
-
-    #         return ProfileResponse(**response.data[0])
-
-    #     except HTTPException:
-    #         raise
-    #     except APIError as e:
-    #         log.exception(f"Failed to create profile: {e}")
-    #         raise HTTPException(
-    #             status_code=status.HTTP_400_BAD_REQUEST,
-    #             detail="Failed to create profile",
-    #         )
-    #     except Exception as e:
-    #         log.exception(f"Failed to create profile: {e}")
     #         raise HTTPException(
     #             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
     #             detail="Internal server error",
