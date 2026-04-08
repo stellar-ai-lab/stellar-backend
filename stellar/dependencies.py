@@ -8,6 +8,7 @@ from supabase import AsyncClientOptions, AuthApiError, acreate_client
 from stellar.account.service import AccountService, account_service
 from stellar.auth_context import AuthContext
 from stellar.config import settings
+from stellar.dev.service import DevService, dev_service
 from stellar.profile.service import ProfileService, profile_service
 from stellar.teams.service import TeamService, team_service
 
@@ -63,6 +64,11 @@ async def get_auth_context(
 
 
 AuthDependency = Annotated[AuthContext, Depends(get_auth_context)]
+
+
+def get_dev_service() -> DevService:
+    """Return the shared dev service instance."""
+    return dev_service
 
 
 def get_account_service() -> AccountService:
