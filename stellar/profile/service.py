@@ -14,6 +14,46 @@ class ProfileService:
 
     PROFILES_TABLE = "profiles"
 
+    async def get_current_user_profile(self, auth: AuthContext) -> ProfileResponse:
+        """Get the current user profile.
+
+        Args:
+            auth: Authentication context.
+
+        Returns:
+            Current user profile.
+        """
+        current_user_id = auth.current_user_id
+        supabase = auth.client
+        try:
+            response = (
+                await supabase.table(self.PROFILES_TABLE)
+                .select("*")
+                .eq("user_id", current_user_id)
+                .execute()
+            )
+            if not response.data:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Profile not found",
+                )
+
+            return ProfileResponse(**response.data[0])
+        except HTTPException:
+            raise
+        except APIError as e:
+            log.exception(f"Failed to get current user profile: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to get current user profile",
+            )
+        except Exception as e:
+            log.exception(f"Failed to get current user profile: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            )
+
     async def create_user_profile(
         self, payload: ProfileCreation, auth: AuthContext
     ) -> ProfileResponse:
@@ -65,7 +105,7 @@ class ProfileService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Internal server error",
-            ) from None
+            )
 
     # async def get_profile(self, user_id: str, supabase: AsyncClient) -> Profile:
     #     """Get current user profile.
