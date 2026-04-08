@@ -1,222 +1,216 @@
 import logging
 
-from fastapi import HTTPException, status
-from postgrest.exceptions import APIError
-from supabase import AsyncClient
-
-from stellar.profile.schemas import CreateProfile, Profile, PublicProfile, UpdateProfile
-
 log = logging.getLogger(__name__)
 
 
 class ProfileService:
     """Profile service."""
 
-    TABLE_NAME = "profiles"
+    PROFILES_TABLE = "profiles"
 
-    async def get_profile(self, user_id: str, supabase: AsyncClient) -> Profile:
-        """Get current user profile.
+    # async def get_profile(self, user_id: str, supabase: AsyncClient) -> Profile:
+    #     """Get current user profile.
 
-        Args:
-            user_id: Current user ID.
-            supabase: Supabase client.
+    #     Args:
+    #         user_id: Current user ID.
+    #         supabase: Supabase client.
 
-        Returns:
-            Current user profile.
-        """
-        try:
-            response = (
-                await supabase.table(self.TABLE_NAME)
-                .select("*")
-                .eq("user_id", user_id)
-                .execute()
-            )
-            if not response.data:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Profile not found",
-                )
+    #     Returns:
+    #         Current user profile.
+    #     """
+    #     try:
+    #         response = (
+    #             await supabase.table(self.TABLE_NAME)
+    #             .select("*")
+    #             .eq("user_id", user_id)
+    #             .execute()
+    #         )
+    #         if not response.data:
+    #             raise HTTPException(
+    #                 status_code=status.HTTP_404_NOT_FOUND,
+    #                 detail="Profile not found",
+    #             )
 
-            return Profile(**response.data[0])
-        except HTTPException:
-            raise
-        except APIError as e:
-            log.exception(f"Failed to get profile: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to get profile",
-            )
-        except Exception as e:
-            log.exception(f"Failed to get profile: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Internal server error",
-            ) from None
+    #         return Profile(**response.data[0])
+    #     except HTTPException:
+    #         raise
+    #     except APIError as e:
+    #         log.exception(f"Failed to get profile: {e}")
+    #         raise HTTPException(
+    #             status_code=status.HTTP_400_BAD_REQUEST,
+    #             detail="Failed to get profile",
+    #         )
+    #     except Exception as e:
+    #         log.exception(f"Failed to get profile: {e}")
+    #         raise HTTPException(
+    #             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #             detail="Internal server error",
+    #         ) from None
 
-    async def get_profile_by_user_id(
-        self, user_id: str, supabase: AsyncClient
-    ) -> PublicProfile:
-        """Get profile by user ID.
+    # async def get_profile_by_user_id(
+    #     self, user_id: str, supabase: AsyncClient
+    # ) -> PublicProfile:
+    #     """Get profile by user ID.
 
-        Args:
-            user_id: User ID.
-            supabase: Supabase client.
+    #     Args:
+    #         user_id: User ID.
+    #         supabase: Supabase client.
 
-        Returns:
-            Profile by user ID.
-        """
-        try:
-            response = (
-                await supabase.table(self.TABLE_NAME)
-                .select("*")
-                .eq("user_id", user_id)
-                .execute()
-            )
-            if not response.data:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Profile not found",
-                )
+    #     Returns:
+    #         Profile by user ID.
+    #     """
+    #     try:
+    #         response = (
+    #             await supabase.table(self.TABLE_NAME)
+    #             .select("*")
+    #             .eq("user_id", user_id)
+    #             .execute()
+    #         )
+    #         if not response.data:
+    #             raise HTTPException(
+    #                 status_code=status.HTTP_404_NOT_FOUND,
+    #                 detail="Profile not found",
+    #             )
 
-            return PublicProfile(**response.data[0])
-        except HTTPException:
-            raise
-        except APIError as e:
-            log.exception(f"Failed to get profile by user ID: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to fetch the profile",
-            )
-        except Exception as e:
-            log.exception(f"Failed to get profile by user ID: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Internal server error",
-            ) from None
+    #         return PublicProfile(**response.data[0])
+    #     except HTTPException:
+    #         raise
+    #     except APIError as e:
+    #         log.exception(f"Failed to get profile by user ID: {e}")
+    #         raise HTTPException(
+    #             status_code=status.HTTP_400_BAD_REQUEST,
+    #             detail="Failed to fetch the profile",
+    #         )
+    #     except Exception as e:
+    #         log.exception(f"Failed to get profile by user ID: {e}")
+    #         raise HTTPException(
+    #             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #             detail="Internal server error",
+    #         ) from None
 
-    async def create_profile(
-        self,
-        payload: CreateProfile,
-        user_id: str,
-        supabase: AsyncClient,
-    ) -> Profile:
-        """Create a new profile.
+    # async def create_profile(
+    #     self,
+    #     payload: ProfileCreation,
+    #     auth: AuthContext,
+    # ) -> ProfileResponse:
+    #     """Create a new profile.
 
-        Args:
-            payload: Payload to create a new profile.
-            user_id: Current user ID.
-            supabase: Supabase client.
+    #     Args:
+    #         payload: Payload to create a new profile.
+    #         auth: Authentication context.
 
-        Returns:
-            Created profile.
-        """
-        try:
-            # check if profile already exists
-            check_profile = (
-                await supabase.table(self.TABLE_NAME)
-                .select("*")
-                .eq("user_id", user_id)
-                .execute()
-            )
-            if check_profile.data:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Profile already exists",
-                )
+    #     Returns:
+    #         Created profile response.
+    #     """
 
-            # create profile
-            data = payload.model_dump(mode="json")
-            data["user_id"] = user_id
+    #     user_id = auth.current_user_id
+    #     supabase = auth.client
+    #     try:
+    #         existing = (
+    #             await supabase.table(self.PROFILES_TABLE)
+    #             .select("id")
+    #             .eq("user_id", user_id)
+    #             .execute()
+    #         )
+    #         if existing.data:
+    #             raise HTTPException(
+    #                 status_code=status.HTTP_409_CONFLICT,
+    #                 detail="Profile already exists",
+    #             )
 
-            response = await supabase.table(self.TABLE_NAME).insert(data).execute()
-            if not response.data or not response.data[0]:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Failed to create profile",
-                )
+    #         data = payload.model_dump(mode="json")
+    #         data["user_id"] = user_id
 
-            return Profile(**response.data[0])
-        except HTTPException:
-            raise
-        except APIError as e:
-            log.exception(f"Failed to create profile: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to create profile",
-            )
-        except Exception as e:
-            log.exception(f"Failed to create profile: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Internal server error",
-            ) from None
+    #         response = await supabase.table(self.PROFILES_TABLE).insert(data).execute()
+    #         if not response.data or not response.data[0]:
+    #             raise HTTPException(
+    #                 status_code=status.HTTP_400_BAD_REQUEST,
+    #                 detail="Failed to create profile",
+    #             )
 
-    async def update_profile(
-        self,
-        payload: UpdateProfile,
-        user_id: str,
-        supabase: AsyncClient,
-    ) -> Profile:
-        """Update a profile.
+    #         return ProfileResponse(**response.data[0])
 
-        Args:
-            payload: Payload to update a profile.
-            user_id: Current user ID.
-            supabase: Supabase client.
+    #     except HTTPException:
+    #         raise
+    #     except APIError as e:
+    #         log.exception(f"Failed to create profile: {e}")
+    #         raise HTTPException(
+    #             status_code=status.HTTP_400_BAD_REQUEST,
+    #             detail="Failed to create profile",
+    #         )
+    #     except Exception as e:
+    #         log.exception(f"Failed to create profile: {e}")
+    #         raise HTTPException(
+    #             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #             detail="Internal server error",
+    #         ) from None
 
-        Returns:
-            Updated profile.
-        """
-        try:
-            # check if profile exists
-            check_profile = (
-                await supabase.table(self.TABLE_NAME)
-                .select("*")
-                .eq("user_id", user_id)
-                .execute()
-            )
-            if not check_profile.data:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Profile not found",
-                )
+    # async def update_profile(
+    #     self,
+    #     payload: UpdateProfile,
+    #     user_id: str,
+    #     supabase: AsyncClient,
+    # ) -> Profile:
+    #     """Update a profile.
 
-            # update profile
-            data = payload.model_dump(mode="json", exclude_none=True)
-            if not data:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="No data to update",
-                )
+    #     Args:
+    #         payload: Payload to update a profile.
+    #         user_id: Current user ID.
+    #         supabase: Supabase client.
 
-            response = (
-                await supabase.table(self.TABLE_NAME)
-                .update(data)
-                .eq("user_id", user_id)
-                .execute()
-            )
+    #     Returns:
+    #         Updated profile.
+    #     """
+    #     try:
+    #         # check if profile exists
+    #         check_profile = (
+    #             await supabase.table(self.TABLE_NAME)
+    #             .select("*")
+    #             .eq("user_id", user_id)
+    #             .execute()
+    #         )
+    #         if not check_profile.data:
+    #             raise HTTPException(
+    #                 status_code=status.HTTP_404_NOT_FOUND,
+    #                 detail="Profile not found",
+    #             )
 
-            if not response.data:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Failed to update profile",
-                )
+    #         # update profile
+    #         data = payload.model_dump(mode="json", exclude_none=True)
+    #         if not data:
+    #             raise HTTPException(
+    #                 status_code=status.HTTP_400_BAD_REQUEST,
+    #                 detail="No data to update",
+    #             )
 
-            return Profile(**response.data[0])
-        except HTTPException:
-            raise
-        except APIError as e:
-            log.exception(f"Failed to update profile: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to update profile",
-            )
-        except Exception as e:
-            log.exception(f"Failed to update profile: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Internal server error",
-            ) from None
+    #         response = (
+    #             await supabase.table(self.TABLE_NAME)
+    #             .update(data)
+    #             .eq("user_id", user_id)
+    #             .execute()
+    #         )
+
+    #         if not response.data:
+    #             raise HTTPException(
+    #                 status_code=status.HTTP_400_BAD_REQUEST,
+    #                 detail="Failed to update profile",
+    #             )
+
+    #         return Profile(**response.data[0])
+    #     except HTTPException:
+    #         raise
+    #     except APIError as e:
+    #         log.exception(f"Failed to update profile: {e}")
+    #         raise HTTPException(
+    #             status_code=status.HTTP_400_BAD_REQUEST,
+    #             detail="Failed to update profile",
+    #         )
+    #     except Exception as e:
+    #         log.exception(f"Failed to update profile: {e}")
+    #         raise HTTPException(
+    #             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #             detail="Internal server error",
+    #         ) from None
 
 
 profile_service = ProfileService()

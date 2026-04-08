@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -9,50 +10,37 @@ from stellar.enums import AccountStatus, Gender, JobTitle
 class ProfileBase(BaseModel):
     first_name: str
     last_name: str
+    avatar_url: Optional[str] = None
     gender: Gender
     bio: Optional[str] = None
-    birth_date: Optional[str] = None
+    birth_date: Optional[datetime] = None
     phone_number: Optional[str] = None
-    avatar_url: Optional[str] = None
-    job_title: Optional[JobTitle] = JobTitle.CL13
-    team_id: Optional[str] = None
-    project_id: Optional[str] = None
+    job_title: JobTitle
+    reports_to: str
     account_status: AccountStatus
+    onboarded: bool
 
 
-class CreateProfile(ProfileBase):
+class ProfileCreation(ProfileBase):
     pass
 
 
-class UpdateProfile(BaseModel):
+class ProfileUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    avatar_url: Optional[str] = None
     gender: Optional[Gender] = None
     bio: Optional[str] = None
-    birth_date: Optional[str] = None
+    birth_date: Optional[datetime] = None
     phone_number: Optional[str] = None
-    avatar_url: Optional[str] = None
     job_title: Optional[JobTitle] = None
-    team_id: Optional[str] = None
-    project_id: Optional[str] = None
+    reports_to: Optional[str] = None
     account_status: Optional[AccountStatus] = None
+    onboarded: Optional[bool] = None
 
 
-class PublicProfile(BaseModel):
+class ProfileResponse(ProfileBase):
     id: str
-    user_id: str
-    first_name: str
-    last_name: str
-    gender: Gender
-    bio: Optional[str] = None
-    avatar_url: Optional[str] = None
-    job_title: Optional[JobTitle] = None
-    team_id: Optional[str] = None
-    project_id: Optional[str] = None
-
-
-class Profile(ProfileBase):
-    id: str
-    user_id: str
+    user_id: UUID
     created_at: datetime
     updated_at: datetime
