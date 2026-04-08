@@ -9,7 +9,7 @@ from stellar.profile.schemas import (
 from stellar.profile.service import ProfileService
 from stellar.rate_limiter import limiter
 
-router = APIRouter(prefix="/profile", tags=["Profile Service Endpoints"])
+router = APIRouter(prefix="/profile", tags=["Profile Endpoints"])
 
 
 @router.get("/", status_code=status.HTTP_200_OK)

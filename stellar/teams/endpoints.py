@@ -12,7 +12,7 @@ from stellar.teams.schemas import (
 )
 from stellar.teams.service import TeamService
 
-router = APIRouter(prefix="/teams", tags=["Teams Service Endpoints"])
+router = APIRouter(prefix="/teams", tags=["Teams Endpoints"])
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
