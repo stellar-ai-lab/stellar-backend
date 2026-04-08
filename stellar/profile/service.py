@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 from postgrest import APIError
 
 from stellar.auth_context import AuthContext
-from stellar.profile.schemas import ProfileCreation, ProfileResponse
+from stellar.profile.schemas import ProfileCreation, ProfileResponse, ProfileUpdate
 
 log = logging.getLogger(__name__)
 
@@ -149,72 +149,67 @@ class ProfileService:
                 detail="Internal server error",
             )
 
-    # async def update_profile(
-    #     self,
-    #     payload: UpdateProfile,
-    #     user_id: str,
-    #     supabase: AsyncClient,
-    # ) -> Profile:
-    #     """Update a profile.
+    async def update_user_profile(
+        self, payload: ProfileUpdate, auth: AuthContext
+    ) -> ProfileResponse:
+        """Update a user profile.
 
-    #     Args:
-    #         payload: Payload to update a profile.
-    #         user_id: Current user ID.
-    #         supabase: Supabase client.
+        Args:
+            payload: Payload to update a user profile.
+            auth: Authentication context.
 
-    #     Returns:
-    #         Updated profile.
-    #     """
-    #     try:
-    #         # check if profile exists
-    #         check_profile = (
-    #             await supabase.table(self.TABLE_NAME)
-    #             .select("*")
-    #             .eq("user_id", user_id)
-    #             .execute()
-    #         )
-    #         if not check_profile.data:
-    #             raise HTTPException(
-    #                 status_code=status.HTTP_404_NOT_FOUND,
-    #                 detail="Profile not found",
-    #             )
+        Returns:
+            Updated user profile.
+        """
+        supabase = auth.client
+        current_user_id = auth.current_user_id
+        try:
+            existing = (
+                await supabase.table(self.PROFILES_TABLE)
+                .select("user_id")
+                .eq("user_id", current_user_id)
+                .execute()
+            )
+            if not existing.data:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Profile not found",
+                )
 
-    #         # update profile
-    #         data = payload.model_dump(mode="json", exclude_none=True)
-    #         if not data:
-    #             raise HTTPException(
-    #                 status_code=status.HTTP_400_BAD_REQUEST,
-    #                 detail="No data to update",
-    #             )
+            data = payload.model_dump(mode="json", exclude_none=True)
+            if not data:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="No data to update",
+                )
 
-    #         response = (
-    #             await supabase.table(self.TABLE_NAME)
-    #             .update(data)
-    #             .eq("user_id", user_id)
-    #             .execute()
-    #         )
+            response = (
+                await supabase.table(self.PROFILES_TABLE)
+                .update(data)
+                .eq("user_id", current_user_id)
+                .execute()
+            )
+            if not response.data or not response.data[0]:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Failed to update user profile",
+                )
 
-    #         if not response.data:
-    #             raise HTTPException(
-    #                 status_code=status.HTTP_400_BAD_REQUEST,
-    #                 detail="Failed to update profile",
-    #             )
-
-    #         return Profile(**response.data[0])
-    #     except HTTPException:
-    #         raise
-    #     except APIError as e:
-    #         log.exception(f"Failed to update profile: {e}")
-    #         raise HTTPException(
-    #             status_code=status.HTTP_400_BAD_REQUEST,
-    #             detail="Failed to update profile",
-    #         )
-    #     except Exception as e:
-    #         log.exception(f"Failed to update profile: {e}")
-    #         raise HTTPException(
-    #             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-    #             detail="Internal server error",
-    #         ) from None
+            return ProfileResponse(**response.data[0])
+        except HTTPException:
+            raise
+        except APIError as e:
+            log.exception(f"Failed to update user profile: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to update user profile",
+            )
+        except Exception as e:
+            log.exception(f"Failed to update user profile: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            )
 
 
 profile_service = ProfileService()

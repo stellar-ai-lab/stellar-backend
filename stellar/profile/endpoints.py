@@ -4,6 +4,7 @@ from stellar.dependencies import AuthDependency, get_profile_service
 from stellar.profile.schemas import (
     ProfileCreation,
     ProfileResponse,
+    ProfileUpdate,
 )
 from stellar.profile.service import ProfileService
 from stellar.rate_limiter import limiter
@@ -44,3 +45,15 @@ async def create_user_profile(
 ) -> ProfileResponse:
     """Create a new user profile."""
     return await service.create_user_profile(payload, auth)
+
+
+@router.put("/", status_code=status.HTTP_200_OK)
+@limiter.limit("5/minute")
+async def update_user_profile(
+    request: Request,
+    payload: ProfileUpdate,
+    auth: AuthDependency,
+    service: ProfileService = Depends(get_profile_service),
+) -> ProfileResponse:
+    """Update a user profile."""
+    return await service.update_user_profile(payload, auth)
