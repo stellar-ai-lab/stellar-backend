@@ -22,6 +22,18 @@ async def get_current_user_profile(
     return await service.get_current_user_profile(auth)
 
 
+@router.get("/{user_id}", status_code=status.HTTP_200_OK)
+@limiter.limit("15/minute")
+async def get_user_profile_by_user_id(
+    request: Request,
+    user_id: str,
+    auth: AuthDependency,
+    service: ProfileService = Depends(get_profile_service),
+) -> ProfileResponse:
+    """Get a user profile by user ID."""
+    return await service.get_user_profile_by_user_id(user_id, auth)
+
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 @limiter.limit("1/minute")
 async def create_user_profile(

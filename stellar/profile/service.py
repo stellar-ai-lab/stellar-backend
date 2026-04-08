@@ -54,6 +54,48 @@ class ProfileService:
                 detail="Internal server error",
             )
 
+    async def get_user_profile_by_user_id(
+        self, user_id: str, auth: AuthContext
+    ) -> ProfileResponse:
+        """Get a user profile by user ID.
+
+        Args:
+            user_id: User ID.
+            auth: Authentication context.
+
+        Returns:
+            User profile.
+        """
+        supabase = auth.client
+        try:
+            response = (
+                await supabase.table(self.PROFILES_TABLE)
+                .select("*")
+                .eq("user_id", user_id)
+                .execute()
+            )
+            if not response.data:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Profile not found",
+                )
+
+            return ProfileResponse(**response.data[0])
+        except HTTPException:
+            raise
+        except APIError as e:
+            log.exception(f"Failed to get user profile by user ID: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to get user profile by user ID",
+            )
+        except Exception as e:
+            log.exception(f"Failed to get user profile by user ID: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            )
+
     async def create_user_profile(
         self, payload: ProfileCreation, auth: AuthContext
     ) -> ProfileResponse:
@@ -106,86 +148,6 @@ class ProfileService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Internal server error",
             )
-
-    # async def get_profile(self, user_id: str, supabase: AsyncClient) -> Profile:
-    #     """Get current user profile.
-
-    #     Args:
-    #         user_id: Current user ID.
-    #         supabase: Supabase client.
-
-    #     Returns:
-    #         Current user profile.
-    #     """
-    #     try:
-    #         response = (
-    #             await supabase.table(self.TABLE_NAME)
-    #             .select("*")
-    #             .eq("user_id", user_id)
-    #             .execute()
-    #         )
-    #         if not response.data:
-    #             raise HTTPException(
-    #                 status_code=status.HTTP_404_NOT_FOUND,
-    #                 detail="Profile not found",
-    #             )
-
-    #         return Profile(**response.data[0])
-    #     except HTTPException:
-    #         raise
-    #     except APIError as e:
-    #         log.exception(f"Failed to get profile: {e}")
-    #         raise HTTPException(
-    #             status_code=status.HTTP_400_BAD_REQUEST,
-    #             detail="Failed to get profile",
-    #         )
-    #     except Exception as e:
-    #         log.exception(f"Failed to get profile: {e}")
-    #         raise HTTPException(
-    #             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-    #             detail="Internal server error",
-    #         ) from None
-
-    # async def get_profile_by_user_id(
-    #     self, user_id: str, supabase: AsyncClient
-    # ) -> PublicProfile:
-    #     """Get profile by user ID.
-
-    #     Args:
-    #         user_id: User ID.
-    #         supabase: Supabase client.
-
-    #     Returns:
-    #         Profile by user ID.
-    #     """
-    #     try:
-    #         response = (
-    #             await supabase.table(self.TABLE_NAME)
-    #             .select("*")
-    #             .eq("user_id", user_id)
-    #             .execute()
-    #         )
-    #         if not response.data:
-    #             raise HTTPException(
-    #                 status_code=status.HTTP_404_NOT_FOUND,
-    #                 detail="Profile not found",
-    #             )
-
-    #         return PublicProfile(**response.data[0])
-    #     except HTTPException:
-    #         raise
-    #     except APIError as e:
-    #         log.exception(f"Failed to get profile by user ID: {e}")
-    #         raise HTTPException(
-    #             status_code=status.HTTP_400_BAD_REQUEST,
-    #             detail="Failed to fetch the profile",
-    #         )
-    #     except Exception as e:
-    #         log.exception(f"Failed to get profile by user ID: {e}")
-    #         raise HTTPException(
-    #             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-    #             detail="Internal server error",
-    #         ) from None
 
     # async def update_profile(
     #     self,
