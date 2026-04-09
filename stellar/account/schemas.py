@@ -1,55 +1,25 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr
 
-from stellar.enums import AccountStatus, JobTitle, UserRole
+from stellar.enums import UserRole
 
 
-class UserAccountBase(BaseModel):
+class AccountBase(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=8)
-    first_name: str
-    last_name: str
-    job_title: JobTitle
+    password: str
     role: UserRole
-    onboarded: bool
 
 
-class UserAccountCreation(UserAccountBase):
+class AccountCreation(AccountBase):
     pass
 
 
-class UserAccountResponse(BaseModel):
+class AccountResponse(BaseModel):
     id: UUID
     email: EmailStr
-    name: str
-    job_title: JobTitle
     role: UserRole
-    status: AccountStatus
-    onboarded: bool
-    created_by: str
+    created_by: UUID
     created_at: datetime
     updated_at: datetime
-
-
-class CreateUserAccountResponse(BaseModel):
-    id: UUID
-    email: str
-    role: str
-    name: str
-
-
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class LoginResponse(BaseModel):
-    access_token: str
-    refresh_token: str
-
-
-class TestAccountCreation(BaseModel):
-    email: EmailStr
-    password: str
