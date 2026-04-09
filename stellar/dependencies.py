@@ -37,12 +37,9 @@ async def get_auth_context(
                 detail="Invalid or expired token",
             )
 
-        name = f"{response.user.user_metadata.get('first_name', '')} {response.user.user_metadata.get('last_name', '')}".strip()
-
         return AuthContext(
             client=supabase_client,
             current_user_id=response.user.id,
-            current_user_name=name,
             token=token,
             role=response.user.user_metadata.get("role"),
         )
