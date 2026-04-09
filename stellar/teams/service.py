@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from postgrest.exceptions import APIError
 
 from stellar.auth_context import AuthContext
-from stellar.enums import AllowedCreationRoles
+from stellar.enums import AdminRole
 from stellar.teams.schemas import (
     TeamCreation,
     TeamMemberCreation,
@@ -165,7 +165,7 @@ class TeamService:
         if role is None:
             return False
         try:
-            AllowedCreationRoles(role)
+            AdminRole(role)
             return True
         except ValueError:
             return False

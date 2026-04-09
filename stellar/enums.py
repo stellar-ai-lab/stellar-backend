@@ -10,7 +10,7 @@ class UserRole(StrEnum):
     IC = "ic"
 
 
-class AllowedCreationRoles(StrEnum):
+class AdminRole(StrEnum):
     DEVELOPER = "developer"
     LEADERSHIP = "leadership"
     MANAGER = "manager"
