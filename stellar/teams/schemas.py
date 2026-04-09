@@ -5,9 +5,13 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
-class TeamCreation(BaseModel):
+class TeamBase(BaseModel):
     name: str
     description: Optional[str] = None
+
+
+class TeamCreation(TeamBase):
+    pass
 
 
 class TeamUpdate(BaseModel):
@@ -16,24 +20,30 @@ class TeamUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 
-class TeamResponse(BaseModel):
+class TeamResponse(TeamBase):
     id: UUID
-    name: str
-    description: Optional[str] = None
     created_by: UUID
     is_active: bool
     created_at: datetime
     updated_at: datetime
 
 
-class TeamMemberCreation(BaseModel):
+class TeamMemberBase(BaseModel):
     user_id: UUID
 
 
-class TeamMemberResponse(BaseModel):
+class TeamMemberCreation(TeamMemberBase):
+    pass
+
+
+class TeamMemberUpdate(BaseModel):
+    team_id: Optional[UUID] = None
+    user_id: Optional[UUID] = None
+
+
+class TeamMemberResponse(TeamMemberBase):
     id: UUID
     team_id: UUID
-    user_id: UUID
-    added_by: str
+    added_by: UUID
     created_at: datetime
     updated_at: datetime

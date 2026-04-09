@@ -41,7 +41,11 @@ class TeamService:
                     detail="No teams found",
                 )
 
-            return [TeamResponse(**team) for team in response.data]
+            teams: List[TeamResponse] = []
+            for team in response.data:
+                teams.append(TeamResponse(**team))
+
+            return teams
         except HTTPException:
             raise
         except APIError as e:
@@ -55,9 +59,11 @@ class TeamService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Internal server error",
-            ) from None
+            )
 
-    async def get_team_members(self, team_id: str, auth: AuthContext) -> TeamResponse:
+    async def get_team_members_by_team_id(
+        self, team_id: str, auth: AuthContext
+    ) -> List[TeamMemberResponse]:
         """Get the list of members of a team.
 
         Args:
@@ -70,6 +76,23 @@ class TeamService:
         supabase = auth.client
 
         try:
+            check_team = (
+                await supabase.table(self.TEAMS_TABLE)
+                .select("id, is_active")
+                .eq("id", team_id)
+                .execute()
+            )
+            if not check_team.data:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Team not found",
+                )
+            if not check_team.data[0]["is_active"]:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Team is not active",
+                )
+
             response = (
                 await supabase.table(self.TEAMS_MEMBERS_TABLE)
                 .select("*")
@@ -82,7 +105,12 @@ class TeamService:
                     detail="No team members found",
                 )
 
-            return [TeamMemberResponse(**member) for member in response.data]
+            team_members: List[TeamMemberResponse] = []
+            for member in response.data:
+                team_members.append(TeamMemberResponse(**member))
+
+            return team_members
+
         except HTTPException:
             raise
         except APIError as e:
@@ -129,7 +157,7 @@ class TeamService:
             if existing.data:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
-                    detail="Team already exists",
+                    detail="Team with this name already exists",
                 )
 
             data = payload.model_dump(mode="json")
@@ -157,7 +185,7 @@ class TeamService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Internal server error",
-            ) from None
+            )
 
     def _is_allowed_role(self, role: str | None) -> bool:
         """Check if the role is allowed to perform the action."""
@@ -184,7 +212,7 @@ class TeamService:
             Added team member response.
         """
         supabase = auth.client
-        current_user_name = auth.current_user_name
+        current_user_id = auth.current_user_id
 
         try:
             if not self._is_allowed_role(auth.role):
@@ -221,12 +249,12 @@ class TeamService:
             if check_member.data:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
-                    detail="Member already exists",
+                    detail="Member already added to this team",
                 )
 
             data = payload.model_dump(mode="json")
             data["team_id"] = team_id
-            data["added_by"] = current_user_name
+            data["added_by"] = current_user_id
 
             response = (
                 await supabase.table(self.TEAMS_MEMBERS_TABLE).insert(data).execute()
