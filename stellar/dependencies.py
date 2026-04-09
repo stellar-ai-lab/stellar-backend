@@ -50,7 +50,7 @@ async def get_auth_context(
         log.warning(f"Auth error during get auth context: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
+            detail="Invalid or expired token",
         )
     except Exception as e:
         log.exception(f"Failed to get auth context: {e}")
