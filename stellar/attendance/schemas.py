@@ -13,7 +13,7 @@ class AttendanceBase(BaseModel):
     is_late: bool
 
 
-class ClockOut(BaseModel):
+class ClockOutCreation(BaseModel):
     notes: Optional[str] = None
     status: Optional[str] = None
 
@@ -27,9 +27,6 @@ class ClockInResponse(BaseModel):
     updated_at: datetime
 
 
-class AttendanceResponse(AttendanceBase):
-    id: UUID
+class ClockOutResponse(ClockInResponse):
+    time_out: datetime
     notes: Optional[str] = None
-    status: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime

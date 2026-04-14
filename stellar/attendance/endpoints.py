@@ -1,6 +1,10 @@
 from fastapi import APIRouter, Depends, Request, status
 
-from stellar.attendance.schemas import ClockInResponse
+from stellar.attendance.schemas import (
+    ClockInResponse,
+    ClockOutCreation,
+    ClockOutResponse,
+)
 from stellar.attendance.service import AttendanceService
 from stellar.dependencies import AuthDependency, get_attendance_service
 from stellar.rate_limiter import limiter
@@ -17,3 +21,15 @@ async def user_clock_in(
 ) -> ClockInResponse:
     """Clock in a user."""
     return await service.user_clock_in(auth)
+
+
+@router.patch("/clock-out", status_code=status.HTTP_200_OK)
+@limiter.limit("5/minute")
+async def user_clock_out(
+    request: Request,
+    payload: ClockOutCreation,
+    auth: AuthDependency,
+    service: AttendanceService = Depends(get_attendance_service),
+) -> ClockOutResponse:
+    """Clock out a user."""
+    return await service.user_clock_out(auth, payload)
