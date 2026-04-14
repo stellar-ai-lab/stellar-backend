@@ -6,6 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from supabase import AsyncClientOptions, AuthApiError, acreate_client
 
 from stellar.account.service import AccountService, account_service
+from stellar.attendance.service import AttendanceService, attendance_service
 from stellar.auth_context import AuthContext
 from stellar.config import settings
 from stellar.dev.service import DevService, dev_service
@@ -81,3 +82,8 @@ def get_profile_service() -> ProfileService:
 def get_team_service() -> TeamService:
     """Return the shared team service instance."""
     return team_service
+
+
+def get_attendance_service() -> AttendanceService:
+    """Return the shared attendance service instance."""
+    return attendance_service
