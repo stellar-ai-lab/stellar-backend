@@ -42,8 +42,8 @@ class AttendanceService:
 
             data = {
                 "user_id": current_user_id,
-                "date": today,
-                "time_in": now,
+                "date": today.isoformat(),
+                "time_in": now.isoformat(),
                 "is_late": is_late,
             }
 
