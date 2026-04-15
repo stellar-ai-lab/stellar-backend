@@ -4,12 +4,24 @@ from stellar.attendance.schemas import (
     ClockInResponse,
     ClockOutCreation,
     ClockOutResponse,
+    TodayStatusResponse,
 )
 from stellar.attendance.service import AttendanceService
 from stellar.dependencies import AuthDependency, get_attendance_service
 from stellar.rate_limiter import limiter
 
 router = APIRouter(prefix="/attendance", tags=["Attendance Endpoints"])
+
+
+@router.get("/today-status", status_code=status.HTTP_200_OK)
+@limiter.limit("15/minute")
+async def get_today_status(
+    request: Request,
+    auth: AuthDependency,
+    service: AttendanceService = Depends(get_attendance_service),
+) -> TodayStatusResponse:
+    """Get the today's status of the user."""
+    return await service.get_today_status(auth)
 
 
 @router.post("/clock-in", status_code=status.HTTP_201_CREATED)

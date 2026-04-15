@@ -9,6 +9,7 @@ from stellar.attendance.schemas import (
     ClockInResponse,
     ClockOutCreation,
     ClockOutResponse,
+    TodayStatusResponse,
 )
 from stellar.auth_context import AuthContext
 
@@ -20,6 +21,51 @@ class AttendanceService:
 
     ATTENDANCE_LOGS_TABLE = "attendance_logs"
     TIME_ZONE = ZoneInfo("Asia/Manila")
+
+    async def get_today_status(self, auth: AuthContext) -> TodayStatusResponse:
+        """Get the today's status of the user.
+
+        Args:
+            auth: Authentication context.
+
+        Returns:
+            Today status response.
+        """
+        current_user_id = auth.current_user_id
+        supabase = auth.client
+        try:
+            now = datetime.now(self.TIME_ZONE)
+            today = now.date()
+
+            existing = (
+                await supabase.table(self.ATTENDANCE_LOGS_TABLE)
+                .select("*")
+                .eq("user_id", current_user_id)
+                .eq("date", today.isoformat())
+                .execute()
+            )
+            if not existing.data or not existing.data[0]:
+                return TodayStatusResponse(can_clock_in=True, can_clock_out=False)
+
+            if not existing.data[0]["time_out"]:
+                return TodayStatusResponse(can_clock_in=False, can_clock_out=True)
+
+            return TodayStatusResponse(can_clock_in=False, can_clock_out=False)
+
+        except HTTPException:
+            raise
+        except APIError as e:
+            log.exception(f"Failed to get today's status: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to get today's status",
+            )
+        except Exception as e:
+            log.exception(f"Failed to get today's status: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            )
 
     async def user_clock_in(self, auth: AuthContext) -> ClockInResponse:
         """Clock in a user.
