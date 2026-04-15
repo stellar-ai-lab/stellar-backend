@@ -14,7 +14,7 @@ router = APIRouter(prefix="/attendance", tags=["Attendance Endpoints"])
 
 
 @router.get("/today-status", status_code=status.HTTP_200_OK)
-@limiter.limit("15/minute")
+@limiter.limit("20/minute")
 async def get_today_status(
     request: Request,
     auth: AuthDependency,
