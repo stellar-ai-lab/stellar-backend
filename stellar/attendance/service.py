@@ -1,11 +1,13 @@
 import logging
 from datetime import datetime, time
+from typing import List
 from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException, status
 from postgrest.exceptions import APIError
 
 from stellar.attendance.schemas import (
+    AttendanceLogResponse,
     ClockInResponse,
     ClockOutCreation,
     ClockOutResponse,
@@ -62,6 +64,37 @@ class AttendanceService:
             )
         except Exception as e:
             log.exception(f"Failed to get today's status: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            )
+
+    # TODO:
+    async def get_attendance_history(
+        self, auth: AuthContext
+    ) -> List[AttendanceLogResponse]:
+        """Get the attendance history of the user.
+
+        Args:
+            auth: Authentication context.
+
+        Returns:
+            Attendance history response.
+        """
+        current_user_id = auth.current_user_id
+        supabase = auth.client
+        try:
+            return
+        except HTTPException:
+            raise
+        except APIError as e:
+            log.exception(f"Failed to get attendance history: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to get attendance history",
+            )
+        except Exception as e:
+            log.exception(f"Failed to get attendance history: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Internal server error",
