@@ -27,3 +27,16 @@ class ClockOutCreation(BaseModel):
 class ClockOutResponse(ClockInResponse):
     time_out: datetime
     notes: Optional[str] = None
+
+
+class AttendanceLogResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    date: Optional[datetime] = None
+    time_in: Optional[datetime] = None
+    time_out: Optional[datetime] = None
+    is_late: Optional[bool] = None
+    notes: Optional[str] = None
+    status: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime

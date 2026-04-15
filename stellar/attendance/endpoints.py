@@ -1,6 +1,9 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, Request, status
 
 from stellar.attendance.schemas import (
+    AttendanceLogResponse,
     ClockInResponse,
     ClockOutCreation,
     ClockOutResponse,
@@ -22,6 +25,17 @@ async def get_today_status(
 ) -> TodayStatusResponse:
     """Get the today's status of the user."""
     return await service.get_today_status(auth)
+
+
+@router.get("/history", status_code=status.HTTP_200_OK)
+@limiter.limit("20/minute")
+async def get_attendance_history(
+    request: Request,
+    auth: AuthDependency,
+    service: AttendanceService = Depends(get_attendance_service),
+) -> List[AttendanceLogResponse]:
+    """Get the attendance history of the user."""
+    return await service.get_attendance_history(auth)
 
 
 @router.post("/clock-in", status_code=status.HTTP_201_CREATED)
