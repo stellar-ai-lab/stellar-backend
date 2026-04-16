@@ -10,6 +10,7 @@ from stellar.attendance.service import AttendanceService, attendance_service
 from stellar.auth_context import AuthContext
 from stellar.config import settings
 from stellar.dev.service import DevService, dev_service
+from stellar.leave.service import LeaveService, leave_service
 from stellar.profile.service import ProfileService, profile_service
 from stellar.teams.service import TeamService, team_service
 
@@ -87,3 +88,8 @@ def get_team_service() -> TeamService:
 def get_attendance_service() -> AttendanceService:
     """Return the shared attendance service instance."""
     return attendance_service
+
+
+def get_leave_service() -> LeaveService:
+    """Return the shared leave service instance."""
+    return leave_service
