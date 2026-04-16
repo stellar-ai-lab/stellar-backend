@@ -1,4 +1,5 @@
-from typing import List
+from datetime import date
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Request, status
 
@@ -32,10 +33,12 @@ async def get_today_status(
 async def get_attendance_history(
     request: Request,
     auth: AuthDependency,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
     service: AttendanceService = Depends(get_attendance_service),
 ) -> List[AttendanceLogResponse]:
     """Get the attendance history of the user."""
-    return await service.get_attendance_history(auth)
+    return await service.get_attendance_history(auth, start_date, end_date)
 
 
 @router.post("/clock-in", status_code=status.HTTP_201_CREATED)
