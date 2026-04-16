@@ -1,6 +1,6 @@
 import logging
-from datetime import datetime, time
-from typing import List
+from datetime import date, datetime, time, timedelta
+from typing import List, Optional
 from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException, status
@@ -69,14 +69,18 @@ class AttendanceService:
                 detail="Internal server error",
             )
 
-    # TODO:
     async def get_attendance_history(
-        self, auth: AuthContext
+        self,
+        auth: AuthContext,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
     ) -> List[AttendanceLogResponse]:
         """Get the attendance history of the user.
 
         Args:
             auth: Authentication context.
+            start_date: Start date.
+            end_date: End date.
 
         Returns:
             Attendance history response.
@@ -84,7 +88,43 @@ class AttendanceService:
         current_user_id = auth.current_user_id
         supabase = auth.client
         try:
-            return
+            now = datetime.now(self.TIME_ZONE)
+            today = now.date()
+
+            if (start_date is None) ^ (end_date is None):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="start_date and end_date must be provided together",
+                )
+
+            if start_date is None and end_date is None:
+                # Monday-Sunday
+                week_start = today - timedelta(days=today.weekday())
+                week_end = week_start + timedelta(days=6)
+            else:
+                if start_date > end_date:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="start_date must be <= end_date",
+                    )
+                week_start = start_date
+                week_end = end_date
+
+            response = (
+                await supabase.table(self.ATTENDANCE_LOGS_TABLE)
+                .select("*")
+                .eq("user_id", current_user_id)
+                .gte("date", week_start.isoformat())
+                .lte("date", week_end.isoformat())
+                .execute()
+            )
+
+            attendance_logs = []
+            for attendance in response.data or []:
+                attendance_logs.append(AttendanceLogResponse(**attendance))
+
+            return attendance_logs
+
         except HTTPException:
             raise
         except APIError as e:
