@@ -119,7 +119,7 @@ class AttendanceService:
                 .execute()
             )
 
-            attendance_logs = []
+            attendance_logs: List[AttendanceLogResponse] = []
             for attendance in response.data or []:
                 attendance_logs.append(AttendanceLogResponse(**attendance))
 
