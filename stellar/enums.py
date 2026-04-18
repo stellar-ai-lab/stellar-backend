@@ -45,3 +45,10 @@ class LeaveType(StrEnum):
     ML = "ML"
     PL = "PL"
     EL = "EL"
+
+
+class LeaveRequestStatus(StrEnum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    CANCELLED = "cancelled"
