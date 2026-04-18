@@ -37,3 +37,11 @@ class JobTitle(StrEnum):
     CL7 = "CL7"
     CL6 = "CL6"
     CL5 = "CL5"
+
+
+class LeaveType(StrEnum):
+    VL = "VL"
+    SL = "SL"
+    ML = "ML"
+    PL = "PL"
+    EL = "EL"
