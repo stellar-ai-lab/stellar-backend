@@ -1,11 +1,16 @@
 import logging
+from typing import List
 
 from fastapi import HTTPException, status
 from postgrest.exceptions import APIError
 
 from stellar.auth_context import AuthContext
-from stellar.enums import AccountStatus, LeaveRequestStatus
-from stellar.leave.schemas import LeaveRequestCreation, LeaveRequestResponse
+from stellar.enums import AccountStatus, JobTitle, LeaveRequestStatus
+from stellar.leave.schemas import (
+    ApproverResponse,
+    LeaveRequestCreation,
+    LeaveRequestResponse,
+)
 
 log = logging.getLogger(__name__)
 
@@ -118,6 +123,59 @@ class LeaveService:
             )
         except Exception as e:
             log.exception(f"Failed to create leave request: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            )
+
+    async def get_list_of_approvers(self, auth: AuthContext) -> List[ApproverResponse]:
+        """Get the list of approvers.
+
+        Args:
+            auth: Authentication context.
+
+        Returns:
+            List of approvers.
+        """
+        supabase = auth.client
+        try:
+            response = (
+                await supabase.table(self.PROFILES_TABLE)
+                .select("id, user_id, first_name, last_name, avatar_url, job_title")
+                .in_(
+                    "job_title",
+                    [
+                        JobTitle.CL9.value,
+                        JobTitle.CL8.value,
+                        JobTitle.CL7.value,
+                        JobTitle.CL6.value,
+                        JobTitle.CL5.value,
+                    ],
+                )
+                .eq("account_status", AccountStatus.ACTIVE.value)
+                .execute()
+            )
+            if not response.data:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No approvers found",
+                )
+
+            approvers: List[ApproverResponse] = []
+            for user in response.data:
+                approvers.append(ApproverResponse(**user))
+
+            return approvers
+        except HTTPException:
+            raise
+        except APIError as e:
+            log.exception(f"Failed to get list of approvers: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to get list of approvers",
+            )
+        except Exception as e:
+            log.exception(f"Failed to get list of approvers: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Internal server error",

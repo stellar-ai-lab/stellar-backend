@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from stellar.enums import LeaveRequestStatus, LeaveType
+from stellar.enums import JobTitle, LeaveRequestStatus, LeaveType
 
 
 class LeaveRequestCreation(BaseModel):
@@ -28,3 +28,12 @@ class LeaveRequestResponse(BaseModel):
     reviewed_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
+
+
+class ApproverResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    first_name: str
+    last_name: str
+    avatar_url: Optional[str] = None
+    job_title: JobTitle
