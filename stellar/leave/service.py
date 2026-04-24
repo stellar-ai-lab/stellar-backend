@@ -9,7 +9,7 @@ from stellar.enums import AccountStatus, JobTitle, LeaveRequestStatus
 from stellar.leave.schemas import (
     ApproverResponse,
     LeaveRequestCreation,
-    LeaveRequestResponse,
+    LeaveResponse,
 )
 
 log = logging.getLogger(__name__)
@@ -21,9 +21,51 @@ class LeaveService:
     LEAVE_REQUESTS_TABLE = "leave_requests"
     PROFILES_TABLE = "profiles"
 
+    async def get_list_of_leaves(self, auth: AuthContext) -> List[LeaveResponse]:
+        """Get the list of leaves.
+
+        Args:
+            auth: Authentication context.
+
+        Returns:
+            List of leaves.
+        """
+        supabase = auth.client
+        current_user_id = auth.current_user_id
+        try:
+            leave_list = (
+                await supabase.table(self.LEAVE_REQUESTS_TABLE)
+                .select("*")
+                .eq("user_id", current_user_id)
+                .eq("status", LeaveRequestStatus.APPROVED.value)
+                .execute()
+            )
+            if not leave_list.data:
+                return []
+
+            leaves: List[LeaveResponse] = []
+            for leave in leave_list.data:
+                leaves.append(LeaveResponse(**leave))
+
+            return leaves
+        except HTTPException:
+            raise
+        except APIError as e:
+            log.exception(f"Failed to get list of leaves: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to get list of leaves",
+            )
+        except Exception as e:
+            log.exception(f"Failed to get list of leaves: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+            )
+
     async def create_leave_request(
         self, auth: AuthContext, payload: LeaveRequestCreation
-    ) -> LeaveRequestResponse:
+    ) -> LeaveResponse:
         """Create a new leave request.
 
         Args:
@@ -112,7 +154,7 @@ class LeaveService:
                     detail="Failed to create leave request",
                 )
 
-            return LeaveRequestResponse(**response.data[0])
+            return LeaveResponse(**response.data[0])
         except HTTPException:
             raise
         except APIError as e:

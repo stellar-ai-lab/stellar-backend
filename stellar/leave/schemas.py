@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -11,11 +11,11 @@ class LeaveRequestCreation(BaseModel):
     leave_type: LeaveType
     start_date: date
     end_date: date
-    approver: UUID
+    approver: List[UUID]
     reason: Optional[str] = None
 
 
-class LeaveRequestResponse(BaseModel):
+class LeaveResponse(BaseModel):
     id: UUID
     user_id: UUID
     leave_type: LeaveType
@@ -24,7 +24,7 @@ class LeaveRequestResponse(BaseModel):
     total_days: int
     reason: Optional[str] = None
     status: LeaveRequestStatus
-    approver: UUID
+    approver: List[UUID]
     reviewed_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
